@@ -1,0 +1,205 @@
+[
+  {
+    "spot_id": "thingvellir",
+    "less_physical": ["geysir", "kerid"],
+    "more_adventure": ["silfra_snorkeling"],
+    "same_vibes": [],
+    "notes": "Silfra snorkeling is at Þingvellir but is an activity, not a spot"
+  },
+  {
+    "spot_id": "gullfoss",
+    "less_physical": ["geysir"],
+    "more_adventure": ["river_rafting_hvita"],
+    "same_vibes": ["skogafoss", "godafoss"],
+    "notes": "Other major waterfalls offer similar experience"
+  },
+  {
+    "spot_id": "seljalandsfoss",
+    "less_physical": ["skogafoss"],
+    "more_adventure": ["reykjadalur"],
+    "same_vibes": ["skogafoss", "gljufrabui"],
+    "notes": "Walking behind falls requires more mobility than Skógafoss viewing"
+  },
+  {
+    "spot_id": "skogafoss",
+    "less_physical": ["seljalandsfoss"],
+    "more_adventure": ["svartifoss"],
+    "same_vibes": ["seljalandsfoss", "gullfoss", "godafoss"],
+    "notes": "Base viewing is easy; stairs to top are optional"
+  },
+  {
+    "spot_id": "svartifoss",
+    "less_physical": ["skogafoss", "seljalandsfoss"],
+    "more_adventure": ["glacier_hike_skaftafell"],
+    "same_vibes": ["reynisfjara"],
+    "notes": "Requires 1.5-2hr hike; basalt columns similar to Reynisfjara"
+  },
+  {
+    "spot_id": "reynisfjara",
+    "less_physical": ["dyrholaey"],
+    "more_adventure": ["fjadrargljufur"],
+    "same_vibes": ["djupalonssandur", "diamond_beach"],
+    "notes": "Other dramatic black sand/volcanic beaches"
+  },
+  {
+    "spot_id": "dyrholaey",
+    "less_physical": ["vik"],
+    "more_adventure": ["reynisfjara"],
+    "same_vibes": ["latrabjarg"],
+    "notes": "Both are puffin viewing cliffs"
+  },
+  {
+    "spot_id": "jokulsarlon",
+    "less_physical": ["diamond_beach"],
+    "more_adventure": ["kayak_jokulsarlon", "zodiac_jokulsarlon"],
+    "same_vibes": ["diamond_beach"],
+    "notes": "Kayak/zodiac get you closer to ice"
+  },
+  {
+    "spot_id": "diamond_beach",
+    "less_physical": [],
+    "more_adventure": ["jokulsarlon"],
+    "same_vibes": ["jokulsarlon"],
+    "notes": "Very easy access; just across from lagoon"
+  },
+  {
+    "spot_id": "skaftafell",
+    "less_physical": ["jokulsarlon"],
+    "more_adventure": ["glacier_hike_skaftafell", "ice_climbing"],
+    "same_vibes": [],
+    "notes": "Base area is easy; activities from here range in difficulty"
+  },
+  {
+    "spot_id": "fjadrargljufur",
+    "less_physical": ["vik"],
+    "more_adventure": ["svartifoss"],
+    "same_vibes": [],
+    "notes": "Unique canyon; no direct equivalent"
+  },
+  {
+    "spot_id": "kirkjufell",
+    "less_physical": ["budakirkja"],
+    "more_adventure": ["arnarstapi"],
+    "same_vibes": ["stokksnes"],
+    "notes": "Both are iconic mountain photo spots"
+  },
+  {
+    "spot_id": "arnarstapi",
+    "less_physical": ["budakirkja", "kirkjufell"],
+    "more_adventure": ["djupalonssandur"],
+    "same_vibes": ["djupalonssandur"],
+    "notes": "Coastal walks on Snæfellsnes"
+  },
+  {
+    "spot_id": "djupalonssandur",
+    "less_physical": ["kirkjufell", "budakirkja"],
+    "more_adventure": ["arnarstapi"],
+    "same_vibes": ["reynisfjara", "arnarstapi"],
+    "notes": "Rocky beach with more rugged terrain than Kirkjufell"
+  },
+  {
+    "spot_id": "godafoss",
+    "less_physical": [],
+    "more_adventure": ["dettifoss"],
+    "same_vibes": ["gullfoss", "skogafoss"],
+    "notes": "Easy access; Dettifoss is more remote and powerful"
+  },
+  {
+    "spot_id": "dettifoss",
+    "less_physical": ["godafoss"],
+    "more_adventure": [],
+    "same_vibes": ["gullfoss"],
+    "notes": "Most powerful waterfall; no more intense option"
+  },
+  {
+    "spot_id": "myvatn",
+    "less_physical": ["namascard"],
+    "more_adventure": ["dettifoss"],
+    "same_vibes": ["namascard"],
+    "notes": "Geothermal area; Námaskarð is part of same region"
+  },
+  {
+    "spot_id": "namascard",
+    "less_physical": [],
+    "more_adventure": ["myvatn"],
+    "same_vibes": ["geysir"],
+    "notes": "Both are geothermal areas with bubbling/steaming features"
+  },
+  {
+    "spot_id": "husavik",
+    "less_physical": ["akureyri"],
+    "more_adventure": ["whale_watching_husavik"],
+    "same_vibes": ["akureyri"],
+    "notes": "Town itself is easy; whale watching is the draw"
+  },
+  {
+    "spot_id": "stokksnes",
+    "less_physical": ["seydisfjordur"],
+    "more_adventure": [],
+    "same_vibes": ["kirkjufell"],
+    "notes": "Both are iconic mountain reflection shots"
+  },
+  {
+    "spot_id": "dynjandi",
+    "less_physical": [],
+    "more_adventure": ["latrabjarg"],
+    "same_vibes": ["gullfoss", "skogafoss"],
+    "notes": "Remote waterfall; getting there is the adventure"
+  },
+  {
+    "spot_id": "latrabjarg",
+    "less_physical": ["dyrholaey"],
+    "more_adventure": [],
+    "same_vibes": ["dyrholaey"],
+    "notes": "Both are puffin cliffs; Látrabjarg is more remote"
+  },
+  {
+    "spot_id": "blue_lagoon",
+    "less_physical": [],
+    "more_adventure": ["reykjadalur"],
+    "same_vibes": ["sky_lagoon", "myvatn_nature_baths"],
+    "notes": "Commercial hot springs alternatives"
+  },
+  {
+    "spot_id": "sky_lagoon",
+    "less_physical": [],
+    "more_adventure": ["reykjadalur"],
+    "same_vibes": ["blue_lagoon", "myvatn_nature_baths"],
+    "notes": "Commercial hot springs alternatives"
+  },
+  {
+    "spot_id": "secret_lagoon",
+    "less_physical": [],
+    "more_adventure": ["reykjadalur"],
+    "same_vibes": ["myvatn_nature_baths"],
+    "notes": "More natural feel than Blue Lagoon"
+  },
+  {
+    "spot_id": "reykjadalur",
+    "less_physical": ["secret_lagoon", "blue_lagoon", "sky_lagoon"],
+    "more_adventure": [],
+    "same_vibes": [],
+    "notes": "Unique hot river experience; requires hike"
+  },
+  {
+    "spot_id": "myvatn_nature_baths",
+    "less_physical": [],
+    "more_adventure": ["namascard"],
+    "same_vibes": ["blue_lagoon", "sky_lagoon"],
+    "notes": "North's answer to Blue Lagoon"
+  },
+  {
+    "spot_id": "hallgrimskirkja",
+    "less_physical": [],
+    "more_adventure": ["perlan"],
+    "same_vibes": ["harpa"],
+    "notes": "Both are architectural landmarks in Reykjavik"
+  },
+  {
+    "spot_id": "perlan",
+    "less_physical": ["hallgrimskirkja"],
+    "more_adventure": [],
+    "same_vibes": [],
+    "notes": "Indoor museum with observation deck"
+  }
+]

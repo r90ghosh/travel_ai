@@ -1,0 +1,329 @@
+{
+  "destination": {
+    "id": "iceland",
+    "name": "Iceland",
+    "country_code": "IS",
+    "currency": "ISK",
+    "timezone": "Atlantic/Reykjavik",
+    "languages": ["is", "en"],
+    "emergency_number": "112"
+  },
+
+  "regions": [
+    {
+      "id": "reykjavik",
+      "name": "Reykjavik & Reykjanes",
+      "description": "Capital region with urban attractions and geothermal wonders",
+      "hub_spot_id": "reykjavik_city",
+      "typical_days": { "relaxed": 2, "balanced": 1, "packed": 0.5 }
+    },
+    {
+      "id": "golden_circle",
+      "name": "Golden Circle",
+      "description": "Iceland's most famous tourist route",
+      "hub_spot_id": "thingvellir",
+      "typical_days": { "relaxed": 2, "balanced": 1, "packed": 1 }
+    },
+    {
+      "id": "south_coast",
+      "name": "South Coast",
+      "description": "Waterfalls, black sand beaches, and glaciers",
+      "hub_spot_id": "vik",
+      "typical_days": { "relaxed": 4, "balanced": 2.5, "packed": 2 }
+    },
+    {
+      "id": "east_fjords",
+      "name": "East Fjords",
+      "description": "Dramatic fjords and remote fishing villages",
+      "hub_spot_id": "seydisfjordur",
+      "typical_days": { "relaxed": 2, "balanced": 1.5, "packed": 1 }
+    },
+    {
+      "id": "north",
+      "name": "North Iceland",
+      "description": "Akureyri, whale watching, and volcanic landscapes",
+      "hub_spot_id": "akureyri",
+      "typical_days": { "relaxed": 3, "balanced": 2, "packed": 1.5 }
+    },
+    {
+      "id": "snaefellsnes",
+      "name": "Snæfellsnes Peninsula",
+      "description": "Iceland in miniature - glaciers, lava fields, and charming villages",
+      "hub_spot_id": "stykkisholmur",
+      "typical_days": { "relaxed": 2, "balanced": 1.5, "packed": 1 }
+    },
+    {
+      "id": "west_fjords",
+      "name": "Westfjords",
+      "description": "Remote and rugged, off the beaten path",
+      "hub_spot_id": "isafjordur",
+      "typical_days": { "relaxed": 4, "balanced": 3, "packed": 2 }
+    },
+    {
+      "id": "highlands",
+      "name": "Central Highlands",
+      "description": "Uninhabited interior - requires 4x4, summer only",
+      "hub_spot_id": null,
+      "typical_days": { "relaxed": 3, "balanced": 2, "packed": 1 },
+      "requirements": ["4x4_vehicle", "summer_only", "experience"]
+    }
+  ],
+
+  "spot_categories": [
+    {
+      "id": "natural_landmark",
+      "name": "Natural Landmark",
+      "icon": "mountain",
+      "subcategories": ["waterfall", "glacier", "volcano", "canyon", "geyser", "hot_spring", "beach", "viewpoint"]
+    },
+    {
+      "id": "town",
+      "name": "Town / Village",
+      "icon": "building",
+      "subcategories": ["city", "fishing_village", "historic_town"]
+    },
+    {
+      "id": "cultural_site",
+      "name": "Cultural Site",
+      "icon": "museum",
+      "subcategories": ["museum", "church", "historic_site", "art_installation"]
+    },
+    {
+      "id": "geothermal",
+      "name": "Geothermal",
+      "icon": "flame",
+      "subcategories": ["hot_spring", "geothermal_area", "spa"]
+    }
+  ],
+
+  "activity_categories": [
+    {
+      "id": "adventure",
+      "name": "Adventure",
+      "icon": "zap",
+      "subcategories": ["glacier_hike", "ice_cave", "snorkeling", "diving", "caving", "super_jeep"]
+    },
+    {
+      "id": "wildlife",
+      "name": "Wildlife",
+      "icon": "fish",
+      "subcategories": ["whale_watching", "puffin_watching", "seal_watching", "horse_riding"]
+    },
+    {
+      "id": "relaxation",
+      "name": "Relaxation",
+      "icon": "coffee",
+      "subcategories": ["hot_spring", "spa", "geothermal_bath"]
+    },
+    {
+      "id": "tour",
+      "name": "Tour",
+      "icon": "map",
+      "subcategories": ["guided_hike", "boat_tour", "helicopter", "northern_lights_tour"]
+    },
+    {
+      "id": "cultural",
+      "name": "Cultural",
+      "icon": "book",
+      "subcategories": ["museum_visit", "food_tour", "craft_workshop"]
+    }
+  ],
+
+  "physical_levels": [
+    { "id": "easy", "name": "Easy", "description": "No physical exertion required", "icon": "smile" },
+    { "id": "moderate", "name": "Moderate", "description": "Some walking, suitable for most", "icon": "meh" },
+    { "id": "challenging", "name": "Challenging", "description": "Significant physical activity", "icon": "frown" },
+    { "id": "strenuous", "name": "Strenuous", "description": "Demanding, good fitness required", "icon": "alert-triangle" }
+  ],
+
+  "anchor_types": [
+    {
+      "id": "waterfalls",
+      "name": "Waterfalls",
+      "description": "Experience Iceland's powerful waterfalls",
+      "icon": "droplet",
+      "spot_tags": ["waterfall"],
+      "activity_tags": []
+    },
+    {
+      "id": "glaciers",
+      "name": "Glaciers",
+      "description": "Walk on ancient ice or explore ice caves",
+      "icon": "snowflake",
+      "spot_tags": ["glacier"],
+      "activity_tags": ["glacier_hike", "ice_cave"]
+    },
+    {
+      "id": "northern_lights",
+      "name": "Northern Lights",
+      "description": "Hunt for the aurora borealis",
+      "icon": "star",
+      "spot_tags": [],
+      "activity_tags": ["northern_lights_tour"],
+      "seasonal": { "months": [9, 10, 11, 12, 1, 2, 3] }
+    },
+    {
+      "id": "hot_springs",
+      "name": "Hot Springs",
+      "description": "Soak in natural or commercial hot springs",
+      "icon": "thermometer",
+      "spot_tags": ["hot_spring", "spa"],
+      "activity_tags": ["geothermal_bath"]
+    },
+    {
+      "id": "wildlife",
+      "name": "Wildlife",
+      "description": "Whales, puffins, seals, and Icelandic horses",
+      "icon": "bird",
+      "spot_tags": [],
+      "activity_tags": ["whale_watching", "puffin_watching", "horse_riding"]
+    },
+    {
+      "id": "volcanic",
+      "name": "Volcanic Landscapes",
+      "description": "Craters, lava fields, and active geology",
+      "icon": "flame",
+      "spot_tags": ["volcano", "lava_field", "geothermal_area"],
+      "activity_tags": []
+    },
+    {
+      "id": "black_sand",
+      "name": "Black Sand Beaches",
+      "description": "Dramatic volcanic beaches with basalt formations",
+      "icon": "waves",
+      "spot_tags": ["black_sand_beach"],
+      "activity_tags": []
+    },
+    {
+      "id": "snorkeling",
+      "name": "Snorkeling/Diving",
+      "description": "Crystal-clear water at Silfra fissure",
+      "icon": "anchor",
+      "spot_tags": [],
+      "activity_tags": ["snorkeling", "diving"]
+    },
+    {
+      "id": "off_beaten_path",
+      "name": "Off the Beaten Path",
+      "description": "Lesser-known gems away from crowds",
+      "icon": "compass",
+      "spot_tags": ["hidden_gem"],
+      "activity_tags": []
+    }
+  ],
+
+  "traveler_types": [
+    { "id": "solo", "name": "Solo Traveler", "icon": "user" },
+    { "id": "couple", "name": "Couple", "icon": "heart" },
+    { "id": "friends", "name": "Group of Friends", "icon": "users" },
+    { "id": "family", "name": "Family with Kids", "icon": "home" },
+    { "id": "multi_gen", "name": "Multi-Generational", "icon": "users" }
+  ],
+
+  "pacing_types": [
+    {
+      "id": "relaxed",
+      "name": "Relaxed",
+      "description": "Quality over quantity. Savor each moment.",
+      "spots_per_day": [2, 3],
+      "driving_limit_minutes": 150
+    },
+    {
+      "id": "balanced",
+      "name": "Balanced",
+      "description": "See the highlights without exhaustion.",
+      "spots_per_day": [4, 5],
+      "driving_limit_minutes": 240
+    },
+    {
+      "id": "packed",
+      "name": "Packed",
+      "description": "Maximize every moment. Sleep when you're home.",
+      "spots_per_day": [5, 7],
+      "driving_limit_minutes": 330
+    }
+  ],
+
+  "seasons": [
+    {
+      "id": "winter",
+      "name": "Winter",
+      "months": [11, 12, 1, 2],
+      "daylight_hours": { "min": 4, "max": 7 },
+      "highlights": ["northern_lights", "ice_caves", "snowy_landscapes"],
+      "considerations": ["limited_daylight", "road_closures", "weather_unpredictable"]
+    },
+    {
+      "id": "spring",
+      "name": "Spring",
+      "months": [3, 4],
+      "daylight_hours": { "min": 10, "max": 16 },
+      "highlights": ["waterfalls_peak_flow", "puffins_arriving", "northern_lights_possible"],
+      "considerations": ["some_roads_closed", "variable_weather"]
+    },
+    {
+      "id": "summer",
+      "name": "Summer",
+      "months": [5, 6, 7, 8],
+      "daylight_hours": { "min": 18, "max": 24 },
+      "highlights": ["midnight_sun", "highland_access", "puffins", "whale_watching"],
+      "considerations": ["crowds", "higher_prices", "book_ahead"]
+    },
+    {
+      "id": "fall",
+      "name": "Fall",
+      "months": [9, 10],
+      "daylight_hours": { "min": 9, "max": 14 },
+      "highlights": ["northern_lights_begin", "fall_colors", "fewer_crowds"],
+      "considerations": ["weather_variable", "some_roads_closing"]
+    }
+  ],
+
+  "road_types": [
+    { "id": "highway", "name": "Highway", "requires_4x4": false, "speed_limit_kmh": 90 },
+    { "id": "paved", "name": "Paved Road", "requires_4x4": false, "speed_limit_kmh": 80 },
+    { "id": "gravel", "name": "Gravel Road", "requires_4x4": false, "speed_limit_kmh": 60 },
+    { "id": "f_road", "name": "F-Road (Highland)", "requires_4x4": true, "speed_limit_kmh": 40 }
+  ],
+
+  "meal_types": [
+    { "id": "quick", "name": "Quick Bite", "duration_minutes": 20, "description": "Hot dog stand, bakery, gas station" },
+    { "id": "casual", "name": "Casual Dining", "duration_minutes": 45, "description": "Cafe, pizza, soup" },
+    { "id": "sit_down", "name": "Sit-Down Restaurant", "duration_minutes": 75, "description": "Full service dining" },
+    { "id": "fine_dining", "name": "Fine Dining", "duration_minutes": 120, "description": "Upscale restaurant experience" }
+  ],
+
+  "accommodation_types": [
+    { "id": "hostel", "name": "Hostel", "price_range": [30, 80] },
+    { "id": "guesthouse", "name": "Guesthouse", "price_range": [80, 150] },
+    { "id": "hotel", "name": "Hotel", "price_range": [150, 300] },
+    { "id": "boutique_hotel", "name": "Boutique Hotel", "price_range": [250, 500] },
+    { "id": "luxury_hotel", "name": "Luxury Hotel", "price_range": [400, 1000] },
+    { "id": "cabin", "name": "Cabin/Cottage", "price_range": [150, 350] },
+    { "id": "farm_stay", "name": "Farm Stay", "price_range": [100, 200] },
+    { "id": "camping", "name": "Camping", "price_range": [15, 40] }
+  ],
+
+  "safety_warnings": {
+    "reynisfjara": {
+      "type": "danger",
+      "message": "Dangerous sneaker waves. Never turn your back to the ocean. Stay back from the water.",
+      "icon": "alert-triangle"
+    },
+    "glaciers": {
+      "type": "warning",
+      "message": "Never walk on glaciers without a certified guide. Crevasses are hidden and deadly.",
+      "icon": "alert-triangle"
+    },
+    "f_roads": {
+      "type": "info",
+      "message": "F-roads require 4x4 vehicles. Check road.is for conditions. River crossings can be dangerous.",
+      "icon": "info"
+    },
+    "weather": {
+      "type": "info",
+      "message": "Weather changes rapidly. Always check vedur.is and have backup plans.",
+      "icon": "cloud"
+    }
+  }
+}

@@ -1,0 +1,370 @@
+{
+  "pacing_rules": {
+    "relaxed": {
+      "description": "Quality over quantity. Savor each moment.",
+      "max_activities_per_day": 2,
+      "max_spots_per_day": 3,
+      "max_driving_minutes_per_day": 150,
+      "max_single_drive_minutes": 90,
+      "buffer_between_activities_minutes": 45,
+      "required_downtime_hours": 2,
+      "departure_time": "09:30",
+      "dinner_style": "sit_down_reserved",
+      "max_evening_activities_per_trip": 2,
+      "accommodation_proximity_first_activity_minutes": 30,
+      "accommodation_proximity_last_activity_minutes": 30,
+      "inter_spot_max_minutes": 30,
+      "allowed_routing_exceptions_per_day": 0
+    },
+    "balanced": {
+      "description": "See the highlights without exhaustion.",
+      "max_activities_per_day": 3,
+      "max_spots_per_day": 5,
+      "max_driving_minutes_per_day": 240,
+      "max_single_drive_minutes": 120,
+      "buffer_between_activities_minutes": 30,
+      "required_downtime_hours": 1,
+      "departure_time": "08:30",
+      "dinner_style": "mixed",
+      "max_evening_activities_per_week": 2,
+      "accommodation_proximity_first_activity_minutes": 45,
+      "accommodation_proximity_last_activity_minutes": 45,
+      "inter_spot_max_minutes": 45,
+      "allowed_routing_exceptions_per_day": 1
+    },
+    "packed": {
+      "description": "Maximize every moment. Sleep when you're home.",
+      "max_activities_per_day": 4,
+      "max_spots_per_day": 7,
+      "max_driving_minutes_per_day": 330,
+      "max_single_drive_minutes": 150,
+      "buffer_between_activities_minutes": 15,
+      "required_downtime_hours": 0,
+      "departure_time": "07:30",
+      "dinner_style": "efficient",
+      "free_evenings_per_5_days": 1,
+      "accommodation_proximity_first_activity_minutes": 60,
+      "accommodation_proximity_last_activity_minutes": 60,
+      "inter_spot_max_minutes": 60,
+      "allowed_routing_exceptions_per_day": 2
+    }
+  },
+
+  "traveler_adjustments": {
+    "solo": {
+      "base_pacing": "any",
+      "adjustments": {
+        "social_activities_encouraged": true,
+        "hostel_friendly": true
+      }
+    },
+    "couple": {
+      "base_pacing": "any",
+      "adjustments": {
+        "prioritize_romantic_spots": true,
+        "private_experiences_preferred": true,
+        "special_dinners_min": 2,
+        "golden_hour_priority": "high"
+      }
+    },
+    "friends": {
+      "base_pacing": "any",
+      "adjustments": {
+        "group_activities_preferred": true,
+        "can_push_packed": true,
+        "split_interest_flexibility": true
+      }
+    },
+    "family": {
+      "base_pacing": "relaxed_forced",
+      "adjustments": {
+        "max_spots_per_day": 3,
+        "max_driving_without_break_minutes": 120,
+        "nap_time_block": {"start": "13:00", "end": "15:00", "use_for": "drive_or_rest"},
+        "meal_times_strict": {"lunch": "12:00", "dinner": "17:30"},
+        "return_to_accommodation_by": "18:00",
+        "avoid_spots": ["reynisfjara"],
+        "require_tags": ["families_toddlers"],
+        "avoid_physical_levels": ["challenging", "strenuous"]
+      }
+    },
+    "multi_gen": {
+      "base_pacing": "relaxed_forced",
+      "adjustments": {
+        "max_driving_minutes_per_day": 150,
+        "require_tags": ["mobility_limited"],
+        "physical_levels_allowed": ["easy", "moderate"],
+        "accessible_accommodations_required": true,
+        "sit_down_meals_only": true
+      }
+    }
+  },
+
+  "energy_management": {
+    "physical_level_timing": {
+      "strenuous": {"allowed_hours": [8, 9, 10, 11, 12, 13], "description": "Morning only"},
+      "challenging": {"allowed_hours": [8, 9, 10, 11, 12, 13, 14], "description": "Morning or early afternoon"},
+      "moderate": {"allowed_hours": "any"},
+      "easy": {"allowed_hours": "any", "note": "Good for end of day"}
+    },
+    "recovery_rules": {
+      "after_strenuous": {"gap_hours": 2, "no_more_same_type_today": true},
+      "after_challenging": {"gap_hours": 1},
+      "after_glacier_activity": {"no_more_hikes_today": true},
+      "after_cold_water_activity": {"next_should_be": ["hot_spring", "warm_indoor", "meal"]}
+    },
+    "daily_energy_curve": {
+      "morning": ["strenuous", "challenging", "moderate"],
+      "midday": ["scenic", "lunch", "moderate", "easy"],
+      "afternoon": ["easy", "moderate", "one_more_activity"],
+      "evening": ["relaxation", "dining", "optional_gentle"]
+    }
+  },
+
+  "variety_rules": {
+    "max_same_type_per_day": {
+      "waterfalls": 2,
+      "glacier_activities": 1,
+      "scenic_viewpoint_consecutive": 2
+    },
+    "separation_if_similar": {
+      "hours_between": 2
+    },
+    "type_mixing_required": {
+      "after_looking_spots": 3,
+      "must_include": "doing_activity",
+      "doing_activities": ["hot_spring", "hike", "activity", "town_walk", "meal"]
+    }
+  },
+
+  "time_sensitive_spots": {
+    "thingvellir": {
+      "best_time": "before_10am",
+      "avoid": ["11:00-14:00"],
+      "reason": "Tour buses arrive 10-11am"
+    },
+    "skogafoss": {
+      "best_time": "before_09am",
+      "avoid": ["midday_summer"],
+      "reason": "Crowds and harsh light"
+    },
+    "reynisfjara": {
+      "best_time": "afternoon",
+      "avoid": ["high_tide"],
+      "reason": "Better light on basalt, safer at low tide"
+    },
+    "jokulsarlon": {
+      "best_time": "golden_hour",
+      "avoid": ["midday"],
+      "reason": "Flat light doesn't show ice well"
+    },
+    "blue_lagoon": {
+      "best_time": "evening",
+      "avoid": ["10:00-14:00"],
+      "reason": "Atmosphere and availability"
+    },
+    "kirkjufell": {
+      "best_time": ["sunrise", "sunset", "night"],
+      "avoid": ["midday"],
+      "reason": "Photography light"
+    },
+    "dyrholaey": {
+      "best_time": "evening",
+      "reason": "Puffin activity"
+    }
+  },
+
+  "routing_rules": {
+    "no_backtracking": true,
+    "one_direction_per_day": {
+      "south_coast": "east_OR_west",
+      "ring_road": "clockwise_OR_counterclockwise",
+      "snaefellsnes": "loop_one_direction"
+    },
+    "region_focus": {
+      "rule": "70_percent_in_home_region",
+      "crossover_allowed": "1-2_spots_adjacent_region"
+    },
+    "detour_rules": {
+      "if_over_20_min_detour": {
+        "relaxed": "skip_unless_anchor",
+        "balanced": "only_if_major_highlight",
+        "packed": "include_if_time"
+      }
+    }
+  },
+
+  "regional_assignments": {
+    "golden_circle": {
+      "spots": ["thingvellir", "geysir", "gullfoss", "kerid", "fridheimar", "secret_lagoon"],
+      "can_combine_with": ["reykjavik"],
+      "min_days_relaxed": 2,
+      "min_days_balanced": 1,
+      "min_days_packed": 1
+    },
+    "south_coast_west": {
+      "spots": ["seljalandsfoss", "skogafoss", "reynisfjara", "dyrholaey", "vik"],
+      "can_combine_with": ["golden_circle"],
+      "min_days_relaxed": 2,
+      "min_days_balanced": 1,
+      "min_days_packed": 1
+    },
+    "south_coast_east": {
+      "spots": ["fjadrargljufur", "skaftafell", "svartifoss", "jokulsarlon", "diamond_beach"],
+      "can_combine_with": [],
+      "min_days_relaxed": 2,
+      "min_days_balanced": 1.5,
+      "min_days_packed": 1
+    },
+    "snaefellsnes": {
+      "spots": ["kirkjufell", "arnarstapi", "djupalonssandur", "budakirkja"],
+      "can_combine_with": [],
+      "min_days_relaxed": 2,
+      "min_days_balanced": 1.5,
+      "min_days_packed": 1
+    },
+    "north": {
+      "spots": ["godafoss", "dettifoss", "myvatn", "namascard", "husavik", "akureyri"],
+      "can_combine_with": [],
+      "min_days_relaxed": 3,
+      "min_days_balanced": 2,
+      "min_days_packed": 1.5
+    },
+    "reykjavik": {
+      "spots": ["hallgrimskirkja", "harpa", "sun_voyager", "perlan", "blue_lagoon", "sky_lagoon"],
+      "can_combine_with": ["golden_circle"],
+      "min_days_relaxed": 2,
+      "min_days_balanced": 1,
+      "min_days_packed": 0.5
+    }
+  },
+
+  "cannot_combine_same_day": [
+    ["snaefellsnes", "south_coast"],
+    ["north", "south_coast"],
+    ["west_fjords", "*"],
+    ["glacier_hike", "snorkeling"],
+    ["strenuous", "strenuous"]
+  ],
+
+  "anchor_rules": {
+    "distribution": "spread_across_trip_not_clustered",
+    "backup_required_for": "weather_critical",
+    "max_anchors_by_trip_length": {
+      "3-5_days": 2,
+      "6-9_days": 3,
+      "10-14_days": 4,
+      "15+_days": "all"
+    },
+    "anchor_specific": {
+      "northern_lights": {
+        "months": [9, 10, 11, 12, 1, 2, 3],
+        "time": "after_21:00",
+        "location": "away_from_reykjavik",
+        "dont_schedule_tiring_day_before": true,
+        "multiple_night_attempts": true
+      },
+      "glaciers": {
+        "requires_activity": true,
+        "book_ahead_days": 3,
+        "prefer_morning": true
+      },
+      "hot_springs": {
+        "include_both_types": ["commercial", "natural"],
+        "place_after_physical": true,
+        "evening_preferred": true,
+        "book_ahead_commercial_days": 14
+      },
+      "wildlife": {
+        "whale_watching_prefer_morning": true,
+        "puffins_months": [5, 6, 7, 8],
+        "puffins_time": "evening",
+        "book_ahead_days": 2
+      }
+    }
+  },
+
+  "meal_timing": {
+    "relaxed": {
+      "breakfast": {"time": "08:30-09:30", "style": "sit_down"},
+      "lunch": {"time": "12:30-14:00", "duration_minutes": 60},
+      "dinner": {"time": "19:00-21:00", "style": "reserved"}
+    },
+    "balanced": {
+      "breakfast": {"time": "08:00-08:30", "style": "moderate"},
+      "lunch": {"time": "12:00-13:00", "duration_minutes": 45},
+      "dinner": {"time": "19:00-20:30", "style": "mixed"}
+    },
+    "packed": {
+      "breakfast": {"time": "07:00-07:30", "style": "quick_or_packed"},
+      "lunch": {"time": "12:00-12:30", "duration_minutes": 30},
+      "dinner": {"time": "18:30-19:30", "style": "efficient"}
+    }
+  },
+
+  "cost_estimates_usd_per_day_2_people": {
+    "budget": {
+      "accommodation": [80, 120],
+      "food": [40, 60],
+      "fuel": [30, 50],
+      "activities": [0, 50],
+      "total": [150, 280]
+    },
+    "moderate": {
+      "accommodation": [150, 200],
+      "food": [80, 120],
+      "fuel": [30, 50],
+      "activities": [50, 150],
+      "total": [310, 520]
+    },
+    "comfort": {
+      "accommodation": [250, 350],
+      "food": [150, 200],
+      "fuel": [30, 50],
+      "activities": [150, 250],
+      "total": [580, 850]
+    },
+    "luxury": {
+      "accommodation": [400, 600],
+      "food": [250, 400],
+      "fuel": [30, 50],
+      "activities": [250, 400],
+      "total": [930, 1450]
+    }
+  },
+
+  "validation_checklist": {
+    "logistics": [
+      "total_driving_within_pacing_limit",
+      "no_single_drive_exceeds_limit",
+      "no_backtracking",
+      "accommodation_near_day_end",
+      "gas_station_on_route_if_needed"
+    ],
+    "experience": [
+      "all_anchors_fulfilled_with_backups",
+      "no_more_than_2_similar_in_row",
+      "activity_type_mix_each_day",
+      "at_least_one_wow_moment_per_day",
+      "downtime_per_pacing_rules"
+    ],
+    "timing": [
+      "time_sensitive_spots_optimal",
+      "activities_booked_appropriate_slots",
+      "meal_times_realistic",
+      "evening_activities_no_dinner_conflict"
+    ],
+    "traveler_fit": [
+      "physical_levels_match_capability",
+      "best_for_tags_align",
+      "kid_friendly_if_children",
+      "accessible_if_mobility_limited"
+    ],
+    "safety": [
+      "no_dangerous_spots_for_traveler_type",
+      "weather_critical_have_alternatives",
+      "reynisfjara_warning_included",
+      "f_roads_avoided_unless_4x4"
+    ]
+  }
+}
