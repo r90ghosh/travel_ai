@@ -1,44 +1,70 @@
-import { NextRequest, NextResponse } from 'next/server';
-// import { createServerClient } from '@/lib/supabase/server';
-// import { findCacheMatch } from '@/lib/itinerary/cache-matcher';
-// import { generateItinerary } from '@/lib/itinerary/generator';
-import type { GeneratedItinerary, TripFormData, ApiResponse } from '@/types';
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { generateItinerary } from '@/lib/itinerary/generator';
 
-interface GenerateRequest extends TripFormData {
-  trip_id?: string; // If provided, this is for an existing trip
-}
-
-interface GenerateResponse {
-  itinerary: GeneratedItinerary;
-  source: 'cache' | 'differential' | 'full';
-  cache_hit?: boolean;
-}
-
-/**
- * POST /api/itinerary/generate
- * Generate a new itinerary based on trip parameters
- * Uses cache-first strategy with differential generation
- */
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as GenerateRequest;
+    const { tripId, claimToken } = await request.json();
 
-    // TODO: Validate request body
-    // TODO: Calculate season from dates
-    // TODO: Try to find cache match
-    // TODO: If exact match, return cached itinerary
-    // TODO: If partial match, use differential generation
-    // TODO: If no match, do full generation
-    // TODO: Store new/updated cache entry
+    if (!tripId) {
+      return NextResponse.json({ error: 'Trip ID required' }, { status: 400 });
+    }
 
-    return NextResponse.json<ApiResponse<GenerateResponse>>({
-      data: null,
-      error: 'Not implemented',
-    }, { status: 501 });
+    const supabase = await createClient();
+
+    // Get trip
+    const { data: trip, error: tripError } = await supabase
+      .from('trips')
+      .select('*')
+      .eq('id', tripId)
+      .single();
+
+    if (tripError || !trip) {
+      return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
+    }
+
+    // Check access
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Server-side access check
+    const hasAccess =
+      (user && trip.created_by === user.id) || // Owner
+      (claimToken && trip.claim_token === claimToken); // Valid claim token
+
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Check if already has an active version
+    if (trip.active_version > 0) {
+      // Return existing itinerary
+      const { data: version } = await supabase
+        .from('itinerary_versions')
+        .select('*')
+        .eq('trip_id', tripId)
+        .eq('version', trip.active_version)
+        .single();
+
+      if (version) {
+        return NextResponse.json({
+          itinerary: version.data,
+          version,
+          source: 'existing',
+        });
+      }
+    }
+
+    // Generate new itinerary
+    const result = await generateItinerary(tripId);
+
+    return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json<ApiResponse<GenerateResponse>>({
-      data: null,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }, { status: 500 });
+    console.error('Generation error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Generation failed' },
+      { status: 500 }
+    );
   }
 }

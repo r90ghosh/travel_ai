@@ -1,12 +1,13 @@
 'use client';
 
-import type { HydratedItineraryDay } from '@/types';
+import type { ItineraryDay, HydratedItineraryDay } from '@/types';
 import { TimelineItem } from './TimelineItem';
 
 interface DayViewProps {
-  day: HydratedItineraryDay;
+  day: ItineraryDay | HydratedItineraryDay;
   isExpanded?: boolean;
   onToggle?: () => void;
+  onComment?: () => void;
 }
 
 /**

@@ -1,130 +1,293 @@
-import type { TripFormData, GeneratedItinerary, Spot, Activity, RouteSegment } from '@/types';
+import type { Trip, GeneratedItinerary, GenerationTask } from '@/types';
+import decisionEngineRules from '@/data/iceland/decision_engine_rules.json';
+import spots from '@/data/iceland/spots.json';
+import spotLabels from '@/data/iceland/spot_labels.json';
+import activities from '@/data/iceland/activities.json';
+import activityLabels from '@/data/iceland/activity_labels.json';
+import routes from '@/data/iceland/routes.json';
 
-/**
- * System prompt for itinerary generation
- */
-export function getItineraryGenerationSystemPrompt(): string {
-  return `You are an expert travel planner specializing in Iceland. Your role is to create detailed, practical day-by-day itineraries.
-
-Key principles:
-1. Respect driving times - Iceland's roads can be slow and weather-dependent
-2. Balance popular attractions with hidden gems
-3. Consider seasonal constraints (daylight hours, road closures, weather)
-4. Group nearby attractions efficiently
-5. Include practical details like parking, timing, and tips
-
-Output format: Respond with valid JSON matching the GeneratedItinerary schema.`;
+// Filter spots by season
+function filterSpotsBySeason(season: string): typeof spots {
+  return spots.filter(spot => {
+    const label = spotLabels.find(l => l.spot_id === spot.spot_id);
+    if (!label) return true;
+    if (label.seasonality === 'year_round') return true;
+    if (label.seasonality === 'summer_only' && season === 'summer') return true;
+    if (label.seasonality === 'winter_only' && season === 'winter') return true;
+    return false;
+  });
 }
 
-/**
- * User prompt for full itinerary generation
- */
-export function getItineraryGenerationPrompt(
-  request: TripFormData,
-  season: string,
-  spots: Spot[],
-  activities: Activity[],
-  routes: RouteSegment[]
-): string {
-  const duration = calculateDuration(request.start_date, request.end_date);
+// Filter activities by season
+function filterActivitiesBySeason(season: string): typeof activities {
+  return activities.filter(activity => {
+    const label = activityLabels.find(l => l.activity_id === activity.activity_id);
+    if (!label) return true;
+    if (label.seasonality === 'year_round') return true;
+    if (label.seasonality === 'summer_only' && season === 'summer') return true;
+    if (label.seasonality === 'winter_only' && season === 'winter') return true;
+    return false;
+  });
+}
 
-  return `Generate a ${duration}-day Iceland itinerary for the following trip:
+// Get relevant rules for this trip's pacing and traveler type
+function getRelevantRules(trip: Trip) {
+  const pacingRules = decisionEngineRules.pacing_rules[trip.pacing as keyof typeof decisionEngineRules.pacing_rules];
+  const travelerAdjustments = decisionEngineRules.traveler_adjustments[trip.travelers as keyof typeof decisionEngineRules.traveler_adjustments] || {};
+  const energyRules = decisionEngineRules.energy_management;
+  const varietyRules = decisionEngineRules.variety_rules;
+  const routingRules = decisionEngineRules.routing_rules;
+  const anchorRules = decisionEngineRules.anchor_rules;
+  const mealTiming = decisionEngineRules.meal_timing[trip.pacing as keyof typeof decisionEngineRules.meal_timing];
 
-**Trip Details:**
-- Start Date: ${request.start_date}
-- End Date: ${request.end_date}
-- Pacing: ${request.pacing}
-- Must-see experiences: ${request.anchors.join(', ') || 'None specified'}
-- Starting/Ending: Reykjavik
+  return {
+    pacing: pacingRules,
+    traveler: travelerAdjustments,
+    energy: energyRules,
+    variety: varietyRules,
+    routing: routingRules,
+    anchors: anchorRules,
+    meals: mealTiming,
+  };
+}
 
-**Season Context:**
+// Build output schema for AI
+const OUTPUT_SCHEMA = `{
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2025-08-01",
+      "day_of_week": "Friday",
+      "title": "Arrival + Golden Circle",
+      "region": "golden_circle",
+      "stats": {
+        "driving_minutes": 180,
+        "driving_km": 150,
+        "spots_count": 3,
+        "activities_count": 1
+      },
+      "timeline": [
+        {
+          "id": "unique_id",
+          "time": "09:00",
+          "end_time": "10:30",
+          "type": "spot",
+          "spot_id": "thingvellir",  // MUST match spot_id from spots.json
+          "duration_minutes": 90,
+          "notes": "Optional specific notes"
+        },
+        {
+          "id": "unique_id",
+          "time": "10:30",
+          "end_time": "11:15",
+          "type": "drive",
+          "route_id": "thingvellir_to_geysir",  // MUST match segment_id from routes.json
+          "duration_minutes": 45
+        },
+        {
+          "id": "unique_id",
+          "time": "13:00",
+          "end_time": "13:45",
+          "type": "meal",
+          "meal_type": "lunch",
+          "meal_suggestion": "Friðheimar tomato farm",
+          "duration_minutes": 45
+        },
+        {
+          "id": "unique_id",
+          "time": "15:00",
+          "end_time": "18:00",
+          "type": "activity",
+          "activity_id": "glacier_hike_solheimar",  // MUST match activity_id from activities.json
+          "duration_minutes": 180
+        }
+      ],
+      "accommodation": {
+        "area": "Selfoss",
+        "suggestion": "Guesthouses in Selfoss area"
+      }
+    }
+  ],
+  "anchor_fulfillment": [
+    {
+      "anchor": "waterfalls",
+      "fulfilled_by": [
+        { "type": "spot", "id": "gullfoss", "day": 1 },
+        { "type": "spot", "id": "skogafoss", "day": 2 }
+      ],
+      "backup": [
+        { "type": "spot", "id": "seljalandsfoss", "day": 2 }
+      ]
+    }
+  ],
+  "warnings": [
+    "Book glacier hike 2-3 days in advance",
+    "Blue Lagoon requires advance booking"
+  ],
+  "booking_reminders": [
+    { "item_id": "glacier_hike_solheimar", "message": "Book glacier hike", "days_ahead": 3 }
+  ]
+}`;
+
+// Full generation prompt (no cache match)
+export function buildFullGenerationPrompt(trip: Trip, season: string): string {
+  const rules = getRelevantRules(trip);
+  const availableSpots = filterSpotsBySeason(season);
+  const availableActivities = filterActivitiesBySeason(season);
+
+  return `
+# Task: Generate a complete ${trip.duration_days}-day Iceland itinerary
+
+## Trip Parameters
+- Dates: ${trip.start_date} to ${trip.end_date} (${trip.duration_days} days)
 - Season: ${season}
-- ${getSeasonalNotes(season)}
+- Travelers: ${trip.travelers} (${trip.traveler_count} people)
+- Pacing: ${trip.pacing}
+- Must-experience anchors: ${trip.anchors.join(', ')}
+- Budget tier: ${trip.budget_tier}
 
-**Available Spots (${spots.length} total):**
-${formatSpotsForPrompt(spots)}
+## CRITICAL RULES - YOU MUST FOLLOW THESE
 
-**Available Activities (${activities.length} total):**
-${formatActivitiesForPrompt(activities)}
+### Pacing Rules (${trip.pacing})
+${JSON.stringify(rules.pacing, null, 2)}
 
-**Route Information:**
-${formatRoutesForPrompt(routes)}
+### Traveler Adjustments (${trip.travelers})
+${JSON.stringify(rules.traveler, null, 2)}
 
-**Requirements:**
-1. Each day should have 3-5 main stops depending on pacing preference
-2. Include driving times between locations
-3. Start and end in Reykjavik
-4. Fulfill all anchor experiences if possible
-5. Balance driving with sightseeing time
-6. Include meals and rest stops
+### Energy Management
+- Strenuous activities: morning only (before 14:00)
+- After glacier/water activities: schedule warm activity next
+- Follow the daily energy curve: high energy morning → moderate midday → easy evening
 
-Generate a complete itinerary in JSON format following the GeneratedItinerary schema.`;
+### Routing Rules
+- NO BACKTRACKING: Day's route must flow in one direction
+- One region focus per day (70%+ of stops in same region)
+- Max ${rules.pacing.inter_spot_max_minutes} minutes between consecutive spots
+- Hotel should be within ${rules.pacing.accommodation_proximity_last_activity_minutes} min of last activity
+
+### Variety Rules
+- Max 2 waterfalls per day
+- Max 1 glacier activity per day
+- No more than 2 "scenic viewpoint" type spots in a row
+- After 3 "looking" spots, include a "doing" activity
+
+### Anchor Fulfillment
+- Each anchor MUST have at least 2 experiences fulfilling it
+- Include a backup option for weather-critical anchors
+- Distribute anchors across the trip (don't cluster in first days)
+
+### Meal Timing (${trip.pacing})
+${JSON.stringify(rules.meals, null, 2)}
+
+## AVAILABLE DATA - USE ONLY THESE IDs
+
+### Spots (use spot_id field)
+${JSON.stringify(availableSpots.map(s => ({
+  spot_id: s.spot_id,
+  name: s.name,
+  region: s.region,
+  duration: s.duration_min_hrs + '-' + s.duration_max_hrs + ' hrs',
+  fulfills_anchors: s.fulfills_anchors
+})), null, 2)}
+
+### Activities (use activity_id field)
+${JSON.stringify(availableActivities.map(a => ({
+  activity_id: a.activity_id,
+  name: a.name,
+  duration_hrs: a.duration_hrs,
+  fulfills_anchors: a.fulfills_anchors,
+  book_ahead_days: a.book_ahead_days
+})), null, 2)}
+
+### Routes (use segment_id field for route_id)
+${JSON.stringify(routes.map(r => ({
+  segment_id: r.segment_id,
+  from: r.from_name,
+  to: r.to_name,
+  drive_min: r.drive_min,
+  distance_km: r.distance_km
+})), null, 2)}
+
+## OUTPUT FORMAT
+Return ONLY valid JSON matching this schema (no markdown, no explanation):
+${OUTPUT_SCHEMA}
+
+## IMPORTANT
+1. ONLY use spot_id, activity_id, segment_id values from the lists above
+2. Generate a unique "id" for each timeline item (use format: "day1_item1", "day1_item2", etc.)
+3. Times must be realistic and account for driving between locations
+4. First day should account for airport arrival time
+5. Last day should account for departure
+6. Verify total driving time per day is within pacing limits
+`;
 }
 
-/**
- * Prompt for extending an existing itinerary
- */
-export function getExtendItineraryPrompt(
+// Differential generation prompt (extending from cache)
+export function buildDifferentialPrompt(
+  trip: Trip,
+  season: string,
   baseItinerary: GeneratedItinerary,
-  daysToAdd: number,
-  availableSpots: Spot[],
-  availableActivities: Activity[]
+  tasks: GenerationTask[]
 ): string {
-  const lastDay = baseItinerary.days[baseItinerary.days.length - 1];
-  const lastSpot = lastDay.timeline[lastDay.timeline.length - 1];
+  const rules = getRelevantRules(trip);
+  const availableSpots = filterSpotsBySeason(season);
+  const availableActivities = filterActivitiesBySeason(season);
 
-  return `Extend this Iceland itinerary by ${daysToAdd} more days.
+  const taskDescriptions = tasks.map(task => {
+    switch (task.type) {
+      case 'extend_days':
+        return `EXTEND: Add ${task.details.add_days} more days (days ${(task.details.from_days as number) + 1} to ${task.details.to_days})`;
+      case 'add_anchor':
+        return `ADD ANCHORS: Include experiences for: ${(task.details.anchors as string[]).join(', ')}`;
+      case 'adjust_pacing':
+        return `ADJUST PACING: Modify from ${task.details.from} to ${task.details.to} pace`;
+      default:
+        return '';
+    }
+  }).join('\n');
 
-**Current Itinerary Ends:**
-- Day ${lastDay.day_number}: ${lastDay.title}
-- Final location: ${lastSpot?.spot_id || 'Unknown'}
-- Spots already visited: ${getAllVisitedSpots(baseItinerary).join(', ')}
+  return `
+# Task: Modify an existing Iceland itinerary
 
-**Available Unvisited Spots:**
-${formatSpotsForPrompt(availableSpots.filter(s => !getAllVisitedSpots(baseItinerary).includes(s.id)))}
+## Base Itinerary (DO NOT regenerate this - modify it)
+${JSON.stringify(baseItinerary, null, 2)}
 
-**Available Activities:**
-${formatActivitiesForPrompt(availableActivities)}
+## Required Modifications
+${taskDescriptions}
 
-Generate ${daysToAdd} additional days that:
-1. Continue logically from where the trip left off
-2. Return to Reykjavik by the final day
-3. Maintain the same pacing as the existing itinerary
-4. Avoid revisiting spots already seen
+## Target Trip Parameters
+- Duration: ${trip.duration_days} days (base is ${baseItinerary.days.length} days)
+- Pacing: ${trip.pacing}
+- Required anchors: ${trip.anchors.join(', ')}
+- Missing anchors to add: ${(tasks.find(t => t.type === 'add_anchor')?.details.anchors as string[] | undefined)?.join(', ') || 'none'}
 
-Return only the new days in JSON format.`;
+## Rules
+${JSON.stringify(rules.pacing, null, 2)}
+
+## Available Spots & Activities
+${JSON.stringify(availableSpots.map(s => ({ spot_id: s.spot_id, name: s.name, region: s.region, fulfills_anchors: s.fulfills_anchors })), null, 2)}
+
+${JSON.stringify(availableActivities.map(a => ({ activity_id: a.activity_id, name: a.name, fulfills_anchors: a.fulfills_anchors })), null, 2)}
+
+## Output Format
+Return JSON with:
+{
+  "modifications": [
+    {
+      "day_number": 3,
+      "action": "insert" | "replace" | "remove",
+      "index": 2,  // Position in timeline
+      "item": { ...timeline item if insert/replace... }
+    }
+  ],
+  "new_days": [
+    { ...full day objects for extended days... }
+  ],
+  "updated_anchor_fulfillment": [...],
+  "updated_warnings": [...],
+  "updated_booking_reminders": [...]
 }
-
-/**
- * Prompt for adding anchor experiences
- */
-export function getAddAnchorPrompt(
-  itinerary: GeneratedItinerary,
-  anchors: string[],
-  spots: Spot[],
-  activities: Activity[]
-): string {
-  return `Modify this itinerary to include the following must-see experiences: ${anchors.join(', ')}
-
-**Current Itinerary:**
-${formatItinerarySummary(itinerary)}
-
-**Spots that could fulfill these anchors:**
-${formatSpotsForPrompt(spots.filter(s =>
-  anchors.some(a => s.fulfills_anchors?.includes(a))
-))}
-
-**Activities that could fulfill these anchors:**
-${formatActivitiesForPrompt(activities.filter(a =>
-  anchors.some(anchor => a.fulfills_anchors?.includes(anchor))
-))}
-
-Determine:
-1. Which day(s) to insert the anchor experiences
-2. What adjustments are needed (removing/shortening other stops)
-3. How to maintain logical routing
-
-Return the modified itinerary with changes highlighted.`;
+`;
 }
 
 /**
@@ -169,84 +332,4 @@ Determine:
 Respond with valid JSON.`;
 }
 
-/**
- * Prompt for resolving conflicting comments
- */
-export function getConflictResolutionPrompt(
-  comments: Array<{ id: string; content: string; intent: string }>,
-  targetId: string
-): string {
-  return `The following comments on "${targetId}" conflict with each other:
-
-${comments.map((c, i) => `${i + 1}. "${c.content}" (Intent: ${c.intent})`).join('\n')}
-
-Analyze these conflicts and suggest:
-1. Which comment should take priority and why
-2. If there's a way to satisfy both/all comments
-3. What questions to ask the user to resolve the conflict
-
-Respond with a resolution strategy in JSON format.`;
-}
-
-// Helper functions
-
-function calculateDuration(startDate: string, endDate: string): number {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const diffTime = Math.abs(end.getTime() - start.getTime());
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-}
-
-function getSeasonalNotes(season: string): string {
-  switch (season) {
-    case 'summer':
-      return 'Long daylight hours (nearly 24h in June). Highland roads (F-roads) may be open. Midnight sun possible.';
-    case 'winter':
-      return 'Short daylight hours (4-6h). Many highland roads closed. Northern lights visible. Weather unpredictable.';
-    case 'spring':
-      return 'Increasing daylight. Some roads still closed. Puffins arriving. Waterfalls at peak flow.';
-    case 'fall':
-      return 'Decreasing daylight. Northern lights season begins. Fall colors. Roads may close unexpectedly.';
-    default:
-      return '';
-  }
-}
-
-function formatSpotsForPrompt(spots: Spot[]): string {
-  return spots
-    .slice(0, 20) // Limit to avoid token overflow
-    .map(s => `- ${s.id}: ${s.name} (${s.region}) - ~${s.duration_min_hrs}-${s.duration_max_hrs}h`)
-    .join('\n');
-}
-
-function formatActivitiesForPrompt(activities: Activity[]): string {
-  return activities
-    .slice(0, 15)
-    .map(a => `- ${a.id}: ${a.name} - ${a.duration_hrs}h, $${a.price_low_usd || 'Free'}`)
-    .join('\n');
-}
-
-function formatRoutesForPrompt(routes: RouteSegment[]): string {
-  return routes
-    .slice(0, 15)
-    .map(r => `- ${r.from_name} → ${r.to_name}: ${r.drive_minutes}min via ${r.road_type}`)
-    .join('\n');
-}
-
-function formatItinerarySummary(itinerary: GeneratedItinerary): string {
-  return itinerary.days
-    .map(d => `Day ${d.day_number}: ${d.title} - ${d.timeline.length} stops`)
-    .join('\n');
-}
-
-function getAllVisitedSpots(itinerary: GeneratedItinerary): string[] {
-  const spots: string[] = [];
-  for (const day of itinerary.days) {
-    for (const item of day.timeline) {
-      if (item.spot_id) {
-        spots.push(item.spot_id);
-      }
-    }
-  }
-  return spots;
-}
+export { OUTPUT_SCHEMA, getRelevantRules, filterSpotsBySeason, filterActivitiesBySeason };

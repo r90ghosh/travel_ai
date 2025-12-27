@@ -1,16 +1,173 @@
 import type {
   GeneratedItinerary,
-  ItineraryVersion,
   Comment,
-  CommentIntent,
   Modification,
+  Trip,
+  ItineraryDay,
+  TimelineItem,
 } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
 
 interface MergeResult {
   itinerary: GeneratedItinerary;
   modifications: Modification[];
   summary: string;
   addressedCommentIds: string[];
+}
+
+interface DifferentialOutput {
+  modifications: {
+    day_number: number;
+    action: 'insert' | 'replace' | 'remove';
+    index: number;
+    item?: TimelineItem;
+  }[];
+  new_days: ItineraryDay[];
+  updated_anchor_fulfillment?: GeneratedItinerary['anchor_fulfillment'];
+  updated_warnings?: string[];
+  updated_booking_reminders?: GeneratedItinerary['booking_reminders'];
+}
+
+/**
+ * Merges differential AI output with base itinerary
+ * Used when extending/modifying cached itineraries
+ */
+export function mergeItinerary(
+  base: GeneratedItinerary,
+  changes: DifferentialOutput,
+  trip: Trip
+): GeneratedItinerary {
+  // Deep clone base
+  const merged: GeneratedItinerary = JSON.parse(JSON.stringify(base));
+  merged.trip_id = trip.id;
+  merged.generated_at = new Date().toISOString();
+
+  // Apply modifications to existing days
+  for (const mod of changes.modifications || []) {
+    const dayIndex = merged.days.findIndex(d => d.day_number === mod.day_number);
+    if (dayIndex === -1) continue;
+
+    const day = merged.days[dayIndex];
+
+    switch (mod.action) {
+      case 'insert':
+        if (mod.item) {
+          mod.item.id = mod.item.id || `day${mod.day_number}_${uuidv4().slice(0, 8)}`;
+          day.timeline.splice(mod.index, 0, mod.item);
+        }
+        break;
+
+      case 'replace':
+        if (mod.item) {
+          mod.item.id = mod.item.id || day.timeline[mod.index]?.id || `day${mod.day_number}_${uuidv4().slice(0, 8)}`;
+          day.timeline[mod.index] = mod.item;
+        }
+        break;
+
+      case 'remove':
+        day.timeline.splice(mod.index, 1);
+        break;
+    }
+
+    // Recalculate day stats
+    merged.days[dayIndex].stats = calculateDayStats(day);
+  }
+
+  // Add new days
+  if (changes.new_days?.length) {
+    const startDate = new Date(trip.start_date);
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    for (const newDay of changes.new_days) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + newDay.day_number - 1);
+
+      newDay.date = date.toISOString().split('T')[0];
+      newDay.day_of_week = days[date.getDay()];
+
+      // Ensure all timeline items have IDs
+      newDay.timeline = newDay.timeline.map((item, idx) => ({
+        ...item,
+        id: item.id || `day${newDay.day_number}_item${idx}`,
+      }));
+
+      merged.days.push(newDay);
+    }
+
+    // Sort days by day_number
+    merged.days.sort((a, b) => a.day_number - b.day_number);
+  }
+
+  // Update anchor fulfillment if provided
+  if (changes.updated_anchor_fulfillment) {
+    merged.anchor_fulfillment = changes.updated_anchor_fulfillment;
+  }
+
+  // Merge warnings
+  if (changes.updated_warnings) {
+    merged.warnings = [...new Set([...merged.warnings, ...changes.updated_warnings])];
+  }
+
+  // Merge booking reminders
+  if (changes.updated_booking_reminders) {
+    const existingIds = new Set(merged.booking_reminders.map(r => r.item_id));
+    for (const reminder of changes.updated_booking_reminders) {
+      if (!existingIds.has(reminder.item_id)) {
+        merged.booking_reminders.push(reminder);
+      }
+    }
+  }
+
+  // Recalculate summary
+  merged.summary = calculateSummary(merged);
+
+  return merged;
+}
+
+function calculateDayStats(day: ItineraryDay) {
+  let drivingMinutes = 0;
+  let drivingKm = 0;
+  let spotsCount = 0;
+  let activitiesCount = 0;
+
+  for (const item of day.timeline) {
+    if (item.type === 'drive') {
+      drivingMinutes += item.duration_minutes;
+      // TODO: Look up actual km from routes.json
+      drivingKm += Math.round(item.duration_minutes * 1.2); // Rough estimate
+    } else if (item.type === 'spot') {
+      spotsCount++;
+    } else if (item.type === 'activity') {
+      activitiesCount++;
+    }
+  }
+
+  return {
+    driving_minutes: drivingMinutes,
+    driving_km: drivingKm,
+    spots_count: spotsCount,
+    activities_count: activitiesCount,
+  };
+}
+
+function calculateSummary(itinerary: GeneratedItinerary) {
+  let totalDrivingKm = 0;
+  let totalDrivingMinutes = 0;
+  const regions = new Set<string>();
+
+  itinerary.days.forEach(day => {
+    totalDrivingKm += day.stats.driving_km;
+    totalDrivingMinutes += day.stats.driving_minutes;
+    regions.add(day.region);
+  });
+
+  return {
+    total_destinations: regions.size,
+    total_driving_km: totalDrivingKm,
+    total_driving_hours: Math.round(totalDrivingMinutes / 60 * 10) / 10,
+    accommodation_stops: itinerary.days.length,
+    estimated_cost: { low: 3000, high: 5000, currency: 'USD' },
+  };
 }
 
 /**

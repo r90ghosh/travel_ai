@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { HydratedItineraryDay } from '@/types';
+import type { GeneratedItinerary, ItineraryDay, HydratedItineraryDay } from '@/types';
 
 interface TripMapProps {
-  days: HydratedItineraryDay[];
+  itinerary?: GeneratedItinerary;
+  days?: (ItineraryDay | HydratedItineraryDay)[];
+  selectedDay?: number;
   activeDay?: number;
+  onSelectDay?: (day: number) => void;
   onSpotClick?: (spotId: string) => void;
 }
 
@@ -13,7 +16,9 @@ interface TripMapProps {
  * Interactive map showing the trip route
  * Uses Mapbox GL JS for rendering
  */
-export function TripMap({ days, activeDay, onSpotClick }: TripMapProps) {
+export function TripMap({ itinerary, days: propDays, selectedDay, activeDay, onSelectDay, onSpotClick }: TripMapProps) {
+  const days = propDays || itinerary?.days || [];
+  const currentDay = selectedDay || activeDay;
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<unknown>(null);
 
@@ -39,8 +44,9 @@ export function TripMap({ days, activeDay, onSpotClick }: TripMapProps) {
       {/* Day filter buttons */}
       <div className="absolute left-2 top-2 flex flex-wrap gap-1">
         <button
+          onClick={() => onSelectDay?.(0)}
           className={`rounded px-2 py-1 text-xs font-medium ${
-            activeDay === undefined
+            currentDay === undefined || currentDay === 0
               ? 'bg-blue-600 text-white'
               : 'bg-white text-slate-700 dark:bg-slate-800 dark:text-slate-200'
           }`}
@@ -50,8 +56,9 @@ export function TripMap({ days, activeDay, onSpotClick }: TripMapProps) {
         {days.map((day) => (
           <button
             key={day.day_number}
+            onClick={() => onSelectDay?.(day.day_number)}
             className={`rounded px-2 py-1 text-xs font-medium ${
-              activeDay === day.day_number
+              currentDay === day.day_number
                 ? 'bg-blue-600 text-white'
                 : 'bg-white text-slate-700 dark:bg-slate-800 dark:text-slate-200'
             }`}
