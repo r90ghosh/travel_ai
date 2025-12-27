@@ -201,6 +201,7 @@ export interface Comment {
   trip_id: string;
   version_at_creation: number;
   user_id: string;
+  user_email?: string; // Enriched from join
   target_type: CommentTargetType;
   target_id: string | null;
   selection_field: string | null;

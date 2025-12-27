@@ -1,53 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
-// import { classifyComment } from '@/lib/ai/classify-comment';
-import type { CommentIntent, ApiResponse } from '@/types';
+import { classifyComment, type CommentIntent } from '@/lib/ai/classify-comment';
+import { createClient } from '@/lib/supabase/server';
 
 interface ClassifyRequest {
-  content: string;
-  target_type: string;
-  target_id?: string;
-  selected_text?: string;
-  itinerary_context?: {
-    day_number: number;
-    current_items: string[];
-  };
+  comment: string;
+  targetType: 'spot' | 'drive' | 'activity' | 'meal' | 'day' | 'trip';
+  targetContext?: string;
+  commentId?: string; // Optional: update existing comment with intent
 }
 
 /**
  * POST /api/comments/classify
- * Classify a comment's intent using AI
+ * Classify a comment's intent using Claude AI
  * Can be called before submitting to preview how the comment will be interpreted
+ * If commentId is provided, updates the comment's intent in the database
  */
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as ClassifyRequest;
 
-    if (!body.content) {
-      return NextResponse.json<ApiResponse<CommentIntent>>({
+    if (!body.comment) {
+      return NextResponse.json({
         data: null,
-        error: 'content is required',
+        error: 'comment is required',
       }, { status: 400 });
     }
 
-    // TODO: Call AI to classify the comment
-    // TODO: Return intent with confidence and details
+    // Classify the comment using Claude
+    const intent = await classifyComment({
+      comment: body.comment,
+      targetType: body.targetType || 'trip',
+      targetContext: body.targetContext,
+    });
 
-    // Mock response for development
-    const mockIntent: CommentIntent = {
-      action: 'unclear',
-      confidence: 'low',
-      details: 'Classification not yet implemented',
-      affects_routing: false,
-      estimated_time_impact_minutes: null,
-      suggested_resolution: null,
-    };
+    // If commentId provided, update the comment in the database
+    if (body.commentId) {
+      const supabase = await createClient();
 
-    return NextResponse.json<ApiResponse<CommentIntent>>({
-      data: mockIntent,
+      await supabase
+        .from('comments')
+        .update({ intent })
+        .eq('id', body.commentId);
+    }
+
+    return NextResponse.json<{ data: CommentIntent; error: null }>({
+      data: intent,
       error: null,
     });
   } catch (error) {
-    return NextResponse.json<ApiResponse<CommentIntent>>({
+    console.error('Classification error:', error);
+    return NextResponse.json({
       data: null,
       error: error instanceof Error ? error.message : 'Unknown error',
     }, { status: 500 });
