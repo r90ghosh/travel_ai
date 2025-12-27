@@ -1,18 +1,21 @@
+import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-// import { createServerClient } from '@/lib/supabase/server';
 
+/**
+ * Protected layout that requires authentication
+ * Redirects to login page if user is not authenticated
+ */
 export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // TODO: Uncomment when Supabase server client is set up
-  // const supabase = createServerClient();
-  // const { data: { user } } = await supabase.auth.getUser();
-  //
-  // if (!user) {
-  //   redirect('/login');
-  // }
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
 
   return <>{children}</>;
 }
