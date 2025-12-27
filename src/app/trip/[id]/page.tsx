@@ -389,34 +389,142 @@ function PrepareTab({ itinerary }: { itinerary: GeneratedItinerary }) {
 
 function BudgetTab({ itinerary, trip }: { itinerary: GeneratedItinerary; trip: Trip }) {
   const { estimated_cost } = itinerary.summary;
+  const variance = estimated_cost.variance_percent ?? 0;
+
+  // Determine variance color and message
+  const getVarianceStyle = (v: number) => {
+    if (v <= 0) return { color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', icon: '✓' };
+    if (v <= 15) return { color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', icon: '!' };
+    return { color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', icon: '⚠' };
+  };
+
+  const varianceStyle = getVarianceStyle(variance);
+  const varianceText = variance <= 0
+    ? `${Math.abs(variance)}% under budget`
+    : `${variance}% over budget`;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold mb-4">Budget Breakdown</h2>
-
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-gray-900">
-            ${estimated_cost.low.toLocaleString()}
+    <div className="space-y-6">
+      {/* Variance Banner */}
+      <div className={`rounded-xl p-4 ${varianceStyle.bg} border ${varianceStyle.border}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className={`text-2xl`}>{varianceStyle.icon}</span>
+            <div>
+              <p className={`font-semibold ${varianceStyle.color}`}>
+                {variance <= 0 ? 'Within Budget' : variance <= 15 ? 'Slightly Over Budget' : 'Over Budget'}
+              </p>
+              <p className={`text-sm ${varianceStyle.color} opacity-80`}>
+                {varianceText}
+              </p>
+            </div>
           </div>
-          <div className="text-sm text-gray-500">Low estimate</div>
-        </div>
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-gray-900">
-            ${estimated_cost.high.toLocaleString()}
+          <div className="text-right">
+            <p className="text-xs text-slate-500">Expected range</p>
+            <p className="font-medium text-slate-700">
+              ${estimated_cost.expected_low?.toLocaleString()} - ${estimated_cost.expected_high?.toLocaleString()}
+            </p>
           </div>
-          <div className="text-sm text-gray-500">High estimate</div>
         </div>
       </div>
 
-      <p className="text-sm text-gray-600">
-        Estimates for {trip.traveler_count} {trip.traveler_count === 1 ? 'person' : 'people'} over {trip.duration_days} days.
-        Based on {trip.budget_tier} tier accommodations and activities.
-      </p>
+      {/* Total Estimate */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+        <h2 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Estimated Total</h2>
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50">
+            <div className="text-3xl font-bold text-slate-900 dark:text-white">
+              ${estimated_cost.low.toLocaleString()}
+            </div>
+            <div className="text-sm text-slate-500 dark:text-slate-400">Low estimate</div>
+          </div>
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl border border-purple-100 dark:border-purple-800/50">
+            <div className="text-3xl font-bold text-slate-900 dark:text-white">
+              ${estimated_cost.high.toLocaleString()}
+            </div>
+            <div className="text-sm text-slate-500 dark:text-slate-400">High estimate</div>
+          </div>
+        </div>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Total for {trip.traveler_count} {trip.traveler_count === 1 ? 'person' : 'people'} over {trip.duration_days} days.
+          Based on <span className="capitalize font-medium">{trip.budget_tier}</span> tier.
+        </p>
+      </div>
 
-      <p className="text-gray-500 text-sm mt-4">
-        Detailed budget breakdown coming soon
-      </p>
+      {/* Breakdown */}
+      {estimated_cost.breakdown && (
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+          <h2 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Cost Breakdown</h2>
+          <div className="space-y-4">
+            <BreakdownRow
+              label="Accommodation"
+              low={estimated_cost.breakdown.accommodation.low}
+              high={estimated_cost.breakdown.accommodation.high}
+              icon="🏨"
+              color="bg-indigo-500"
+            />
+            <BreakdownRow
+              label="Meals"
+              low={estimated_cost.breakdown.meals.low}
+              high={estimated_cost.breakdown.meals.high}
+              icon="🍽️"
+              color="bg-orange-500"
+            />
+            <BreakdownRow
+              label="Activities"
+              low={estimated_cost.breakdown.activities.low}
+              high={estimated_cost.breakdown.activities.high}
+              icon="🎯"
+              color="bg-emerald-500"
+            />
+            <BreakdownRow
+              label="Transport"
+              low={estimated_cost.breakdown.transport.low}
+              high={estimated_cost.breakdown.transport.high}
+              icon="🚗"
+              color="bg-blue-500"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Per Person Note */}
+      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          <span className="font-medium">Note:</span> Estimates include accommodation, meals, activities, car rental, and fuel.
+          Actual costs may vary based on specific choices and seasonal pricing.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function BreakdownRow({ label, low, high, icon, color }: {
+  label: string;
+  low: number;
+  high: number;
+  icon: string;
+  color: string;
+}) {
+  return (
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 flex-1">
+        <span className="text-xl">{icon}</span>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-medium text-slate-700 dark:text-slate-300">{label}</span>
+            <span className="text-sm text-slate-600 dark:text-slate-400">
+              ${low.toLocaleString()} - ${high.toLocaleString()}
+            </span>
+          </div>
+          <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div
+              className={`h-full ${color} rounded-full`}
+              style={{ width: `${Math.min((high / 2000) * 100, 100)}%` }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

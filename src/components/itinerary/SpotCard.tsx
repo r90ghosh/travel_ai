@@ -10,6 +10,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { ImageLightbox } from '@/components/ui/image-lightbox';
+import { getSpotImageUrl } from '@/lib/images';
 
 interface SpotCardProps {
   spot: Spot & { labels?: SpotLabels };
@@ -36,6 +38,9 @@ export function SpotCard({
   // Get teaser (first sentence of description)
   const teaser = spot.description?.split('.')[0] + '.' || '';
 
+  // Get image URL for this spot
+  const imageUrl = getSpotImageUrl(spot.id, spot.name, spot.region);
+
   return (
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
       <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/30 shadow-sm hover:shadow-md transition-shadow dark:border-blue-900/50 dark:from-slate-800 dark:to-blue-900/10">
@@ -43,6 +48,18 @@ export function SpotCard({
         <CollapsibleTrigger asChild>
           <button className="w-full p-4 text-left">
             <div className="flex items-start justify-between gap-3">
+              {/* Thumbnail image */}
+              <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                <ImageLightbox
+                  src={imageUrl}
+                  alt={spot.name}
+                  fallbackName={spot.name}
+                  thumbnailClassName="w-16 h-16 rounded-lg overflow-hidden"
+                  searchQuery={`${spot.region} ${spot.name}`}
+                  searchType="spot"
+                />
+              </div>
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h4 className="font-semibold text-slate-900 dark:text-white">

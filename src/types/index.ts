@@ -118,11 +118,25 @@ export interface ItinerarySummary {
   total_driving_km: number;
   total_driving_hours: number;
   accommodation_stops: number;
-  estimated_cost: {
-    low: number;
-    high: number;
-    currency: string;
+  estimated_cost: EstimatedCost;
+}
+
+export interface EstimatedCost {
+  low: number;
+  high: number;
+  currency: string;
+  // Budget breakdown
+  breakdown: {
+    accommodation: { low: number; high: number };
+    meals: { low: number; high: number };
+    activities: { low: number; high: number };
+    transport: { low: number; high: number }; // car rental + fuel
   };
+  // Expected budget based on tier
+  expected_low: number;
+  expected_high: number;
+  // Variance: negative = under budget, positive = over budget
+  variance_percent: number;
 }
 
 export interface AnchorFulfillment {

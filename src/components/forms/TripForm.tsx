@@ -484,32 +484,57 @@ export function TripForm() {
   };
 
   const handleSubmit = async () => {
+    console.log('[TripForm] handleSubmit called');
+    console.log('[TripForm] Current form data:', formData);
     setIsSubmitting(true);
 
     try {
       const claimToken = generateClaimToken();
+      console.log('[TripForm] Generated claim token:', claimToken);
+
+      const requestBody = {
+        destination_slug: formData.destination_slug,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        travelers: formData.travelers,
+        traveler_count: formData.traveler_count,
+        pacing: formData.pacing,
+        anchors: formData.anchors.length > 0 ? formData.anchors : ['waterfalls'], // Default anchor if none selected
+        budget_tier: formData.budget_tier,
+      };
+      console.log('[TripForm] Request body:', requestBody);
 
       const response = await fetch('/api/trips', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          claim_token: claimToken,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('[TripForm] Response status:', response.status);
       const result = await response.json();
+      console.log('[TripForm] Response body:', result);
 
       if (result.error) {
+        console.error('[TripForm] API returned error:', result.error);
         throw new Error(result.error);
       }
 
-      if (result.data?.id) {
-        storeClaimToken(result.data.id, claimToken);
-        router.push(`/trip/${result.data.id}?token=${claimToken}`);
+      // API returns { trip, claim_token } not { data }
+      const tripId = result.trip?.id;
+      const serverClaimToken = result.claim_token;
+      console.log('[TripForm] Trip ID:', tripId, 'Server claim token:', serverClaimToken);
+
+      if (tripId) {
+        // Use server's claim token if available, otherwise use client-generated one
+        const tokenToStore = serverClaimToken || claimToken;
+        storeClaimToken(tripId, tokenToStore);
+        console.log('[TripForm] Stored claim token, redirecting to:', `/trip/${tripId}`);
+        router.push(`/trip/${tripId}?token=${tokenToStore}`);
+      } else {
+        console.error('[TripForm] No trip ID in response:', result);
       }
     } catch (error) {
-      console.error('Failed to create trip:', error);
+      console.error('[TripForm] Failed to create trip:', error);
     } finally {
       setIsSubmitting(false);
     }

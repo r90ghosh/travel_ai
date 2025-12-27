@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createClientWithClaimToken } from '@/lib/supabase/server';
 import { generateClaimToken } from '@/lib/trip-token';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -19,6 +19,8 @@ const createTripSchema = z.object({
  * Create a new trip (works for both authenticated and anonymous users)
  */
 export async function POST(request: Request) {
+  console.log('[API /api/trips] POST request received');
+
   try {
     const supabase = await createClient();
 
@@ -26,30 +28,46 @@ export async function POST(request: Request) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    console.log('[API /api/trips] User:', user ? user.id : 'anonymous');
 
     const body = await request.json();
+    console.log('[API /api/trips] Request body:', body);
+
     const validated = createTripSchema.parse(body);
+    console.log('[API /api/trips] Validated data:', validated);
 
     // Generate claim token for anonymous users
     const claimToken = user ? null : generateClaimToken();
+    console.log('[API /api/trips] Claim token:', claimToken ? 'generated' : 'null (authenticated user)');
 
-    const { data: trip, error } = await supabase
+    // For anonymous users, use a client with the claim token header
+    // so the SELECT after INSERT works with RLS
+    const insertClient = claimToken
+      ? await createClientWithClaimToken(claimToken)
+      : supabase;
+
+    const insertData = {
+      ...validated,
+      created_by: user?.id || null,
+      claim_token: claimToken,
+      status: 'active',
+      regenerations_used: 0,
+      active_version: 0, // No version yet
+    };
+    console.log('[API /api/trips] Inserting:', insertData);
+
+    const { data: trip, error } = await insertClient
       .from('trips')
-      .insert({
-        ...validated,
-        created_by: user?.id || null,
-        claim_token: claimToken,
-        status: 'active',
-        regenerations_used: 0,
-        active_version: 0, // No version yet
-      })
+      .insert(insertData)
       .select()
       .single();
 
     if (error) {
+      console.error('[API /api/trips] Supabase error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    console.log('[API /api/trips] Trip created successfully:', trip?.id);
     return NextResponse.json({
       trip,
       claim_token: claimToken, // Return so client can store it

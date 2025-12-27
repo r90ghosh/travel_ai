@@ -22,6 +22,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { ImageLightbox } from '@/components/ui/image-lightbox';
+import { getActivityImageUrl } from '@/lib/images';
 
 interface ActivityCardProps {
   activity: Activity & { labels?: ActivityLabels };
@@ -46,6 +48,9 @@ export function ActivityCard({
   const displayDuration = duration || activity.duration_hrs * 60;
   const priceRange = `$${activity.price_low_usd}-$${activity.price_high_usd}`;
 
+  // Get image URL for this activity
+  const imageUrl = getActivityImageUrl(activity.id, activity.name);
+
   return (
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
       <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-white to-emerald-50/30 shadow-sm hover:shadow-md transition-shadow dark:border-emerald-900/50 dark:from-slate-800 dark:to-emerald-900/10">
@@ -53,6 +58,18 @@ export function ActivityCard({
         <CollapsibleTrigger asChild>
           <button className="w-full p-4 text-left">
             <div className="flex items-start justify-between gap-3">
+              {/* Thumbnail image */}
+              <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                <ImageLightbox
+                  src={imageUrl}
+                  alt={activity.name}
+                  fallbackName={activity.name}
+                  thumbnailClassName="w-16 h-16 rounded-lg overflow-hidden"
+                  searchQuery={`Iceland ${activity.name}`}
+                  searchType="activity"
+                />
+              </div>
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h4 className="font-semibold text-slate-900 dark:text-white">

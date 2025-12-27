@@ -3,8 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 import { generateItinerary } from '@/lib/itinerary/generator';
 
 export async function POST(request: Request) {
+  console.log('[API /api/itinerary/generate] POST request received');
+
   try {
     const { tripId, claimToken } = await request.json();
+    console.log('[API /api/itinerary/generate] tripId:', tripId, 'claimToken:', claimToken ? 'present' : 'missing');
 
     if (!tripId) {
       return NextResponse.json({ error: 'Trip ID required' }, { status: 400 });
@@ -20,8 +23,11 @@ export async function POST(request: Request) {
       .single();
 
     if (tripError || !trip) {
+      console.error('[API /api/itinerary/generate] Trip not found:', tripError);
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
     }
+
+    console.log('[API /api/itinerary/generate] Trip found:', trip.id, 'active_version:', trip.active_version);
 
     // Check access
     const {
@@ -33,7 +39,15 @@ export async function POST(request: Request) {
       (user && trip.created_by === user.id) || // Owner
       (claimToken && trip.claim_token === claimToken); // Valid claim token
 
+    console.log('[API /api/itinerary/generate] Access check:', {
+      userId: user?.id,
+      tripCreatedBy: trip.created_by,
+      claimTokenMatch: claimToken === trip.claim_token,
+      hasAccess
+    });
+
     if (!hasAccess) {
+      console.error('[API /api/itinerary/generate] Unauthorized access attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -56,12 +70,14 @@ export async function POST(request: Request) {
       }
     }
 
-    // Generate new itinerary
-    const result = await generateItinerary(tripId);
+    // Generate new itinerary (pass claim token for anonymous trips)
+    console.log('[API /api/itinerary/generate] Starting generation...');
+    const result = await generateItinerary(tripId, claimToken || undefined);
+    console.log('[API /api/itinerary/generate] Generation complete, source:', result.source);
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Generation error:', error);
+    console.error('[API /api/itinerary/generate] Generation error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Generation failed' },
       { status: 500 }
