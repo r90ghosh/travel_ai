@@ -1,6 +1,6 @@
 'use client';
 
-import { Car, ArrowRight, Clock, Navigation, AlertTriangle, Fuel, Signal, SignalZero, Wifi } from 'lucide-react';
+import { Car, ArrowRight, Clock, Navigation, AlertTriangle, Fuel, Signal, SignalZero, Wifi, Route } from 'lucide-react';
 import type { RouteSegment } from '@/types';
 import { Badge } from '@/components/ui/badge';
 
@@ -15,30 +15,33 @@ interface DriveSegmentProps {
  */
 export function DriveSegment({ route, showDetails = true }: DriveSegmentProps) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900">
+    <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100/50 p-4 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900/50 shadow-sm">
       {/* Main route info */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
-          <Car className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+      <div className="flex items-center gap-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-slate-400 to-slate-500 shadow-lg">
+          <Car className="h-5 w-5 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 text-sm font-medium text-slate-900 dark:text-white">
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-white">
             <span className="truncate">{route.from_name}</span>
-            <ArrowRight className="h-3 w-3 flex-shrink-0 text-slate-400" />
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700">
+              <Route className="h-3 w-3 text-slate-500" />
+              <ArrowRight className="h-3 w-3 text-slate-400" />
+            </div>
             <span className="truncate">{route.to_name}</span>
           </div>
-          <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
-            <span className="flex items-center gap-1">
-              <Navigation className="h-3 w-3" />
+          <div className="flex items-center gap-4 mt-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white dark:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm">
+              <Navigation className="h-3 w-3 text-blue-500" />
               {route.distance_km} km
             </span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white dark:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm">
+              <Clock className="h-3 w-3 text-purple-500" />
               {formatDuration(route.drive_minutes)}
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <RoadTypeBadge type={route.road_type} />
           <CoverageBadge coverage={route.cell_coverage} />
         </div>
@@ -46,12 +49,14 @@ export function DriveSegment({ route, showDetails = true }: DriveSegmentProps) {
 
       {/* Additional details */}
       {showDetails && (
-        <>
+        <div className="mt-3 space-y-2">
           {/* Hazards */}
           {route.hazards && route.hazards !== 'none' && route.hazards.toLowerCase() !== 'none' && (
-            <div className="mt-2.5 flex items-start gap-2 rounded-md bg-amber-50 p-2 dark:bg-amber-900/20">
-              <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-amber-800 dark:text-amber-200">
+            <div className="flex items-start gap-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 p-3 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-100 dark:border-amber-800/50">
+              <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/50">
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
                 {route.hazards}
               </p>
             </div>
@@ -59,19 +64,19 @@ export function DriveSegment({ route, showDetails = true }: DriveSegmentProps) {
 
           {/* Gas stations */}
           {route.gas_stations && route.gas_stations !== 'None' && route.gas_stations.toLowerCase() !== 'none' && (
-            <div className="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-              <Fuel className="h-3 w-3" />
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-slate-800/50 rounded-lg px-3 py-2">
+              <Fuel className="h-3.5 w-3.5 text-emerald-500" />
               <span>{route.gas_stations}</span>
             </div>
           )}
 
           {/* Notes */}
           {route.notes && route.notes !== 'N/A' && (
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 italic">
+            <p className="text-xs text-slate-500 dark:text-slate-400 italic bg-white/50 dark:bg-slate-800/50 rounded-lg px-3 py-2">
               {route.notes}
             </p>
           )}
-        </>
+        </div>
       )}
     </div>
   );
@@ -81,26 +86,26 @@ function RoadTypeBadge({ type }: { type: string }) {
   const config: Record<string, { label: string; className: string }> = {
     paved: {
       label: 'Paved',
-      className: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200',
+      className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 border-0',
     },
     gravel: {
       label: 'Gravel',
-      className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 border-yellow-200',
+      className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-0',
     },
     f_road: {
       label: 'F-Road',
-      className: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-200',
+      className: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 border-0',
     },
     mixed: {
       label: 'Mixed',
-      className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 border-orange-200',
+      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 border-0',
     },
   };
 
   const { label, className } = config[type] || config.paved;
 
   return (
-    <Badge variant="outline" className={`text-xs ${className}`}>
+    <Badge className={`text-xs font-medium ${className}`}>
       {label}
     </Badge>
   );
@@ -109,26 +114,26 @@ function RoadTypeBadge({ type }: { type: string }) {
 function CoverageBadge({ coverage }: { coverage: string }) {
   const config: Record<string, { icon: React.ReactNode; label: string; className: string }> = {
     good: {
-      icon: <Wifi className="h-3 w-3" />,
+      icon: <Wifi className="h-3.5 w-3.5" />,
       label: 'Good signal',
-      className: 'text-green-600 dark:text-green-400',
+      className: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30',
     },
     spotty: {
-      icon: <Signal className="h-3 w-3" />,
+      icon: <Signal className="h-3.5 w-3.5" />,
       label: 'Spotty signal',
-      className: 'text-yellow-600 dark:text-yellow-400',
+      className: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30',
     },
     none: {
-      icon: <SignalZero className="h-3 w-3" />,
+      icon: <SignalZero className="h-3.5 w-3.5" />,
       label: 'No signal',
-      className: 'text-red-600 dark:text-red-400',
+      className: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30',
     },
   };
 
   const { icon, label, className } = config[coverage] || config.good;
 
   return (
-    <span className={`flex items-center ${className}`} title={label}>
+    <span className={`flex items-center p-2 rounded-lg ${className}`} title={label}>
       {icon}
     </span>
   );

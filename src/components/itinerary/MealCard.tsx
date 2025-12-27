@@ -1,6 +1,6 @@
 'use client';
 
-import { UtensilsCrossed, Coffee, Sun, Moon } from 'lucide-react';
+import { UtensilsCrossed, Coffee, Sun, Moon, Clock } from 'lucide-react';
 import type { MealType } from '@/types';
 
 interface MealCardProps {
@@ -9,24 +9,37 @@ interface MealCardProps {
   duration?: number;
 }
 
-const MEAL_CONFIG: Record<MealType, { icon: React.ReactNode; label: string; bgColor: string; iconColor: string }> = {
+const MEAL_CONFIG: Record<MealType, {
+  icon: React.ReactNode;
+  label: string;
+  gradient: string;
+  iconBg: string;
+  iconColor: string;
+  border: string;
+}> = {
   breakfast: {
-    icon: <Coffee className="h-4 w-4" />,
+    icon: <Coffee className="h-5 w-5" />,
     label: 'Breakfast',
-    bgColor: 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800',
-    iconColor: 'text-amber-600 dark:text-amber-400',
+    gradient: 'from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20',
+    iconBg: 'bg-gradient-to-br from-amber-400 to-yellow-500',
+    iconColor: 'text-white',
+    border: 'border-amber-100 dark:border-amber-800/50',
   },
   lunch: {
-    icon: <Sun className="h-4 w-4" />,
+    icon: <Sun className="h-5 w-5" />,
     label: 'Lunch',
-    bgColor: 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800',
-    iconColor: 'text-orange-600 dark:text-orange-400',
+    gradient: 'from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20',
+    iconBg: 'bg-gradient-to-br from-orange-400 to-amber-500',
+    iconColor: 'text-white',
+    border: 'border-orange-100 dark:border-orange-800/50',
   },
   dinner: {
-    icon: <Moon className="h-4 w-4" />,
+    icon: <Moon className="h-5 w-5" />,
     label: 'Dinner',
-    bgColor: 'bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800',
-    iconColor: 'text-indigo-600 dark:text-indigo-400',
+    gradient: 'from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20',
+    iconBg: 'bg-gradient-to-br from-indigo-400 to-purple-500',
+    iconColor: 'text-white',
+    border: 'border-indigo-100 dark:border-indigo-800/50',
   },
 };
 
@@ -35,31 +48,34 @@ const MEAL_CONFIG: Record<MealType, { icon: React.ReactNode; label: string; bgCo
  */
 export function MealCard({ mealType, suggestion, duration }: MealCardProps) {
   const config = MEAL_CONFIG[mealType] || {
-    icon: <UtensilsCrossed className="h-4 w-4" />,
+    icon: <UtensilsCrossed className="h-5 w-5" />,
     label: mealType,
-    bgColor: 'bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700',
-    iconColor: 'text-slate-600 dark:text-slate-400',
+    gradient: 'from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900',
+    iconBg: 'bg-gradient-to-br from-slate-400 to-slate-500',
+    iconColor: 'text-white',
+    border: 'border-slate-200 dark:border-slate-700',
   };
 
   return (
-    <div className={`rounded-lg border p-3 ${config.bgColor}`}>
-      <div className="flex items-start gap-3">
-        <div className={`flex h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-slate-700 ${config.iconColor}`}>
+    <div className={`rounded-xl border bg-gradient-to-r p-4 shadow-sm ${config.gradient} ${config.border}`}>
+      <div className="flex items-start gap-4">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-lg ${config.iconBg} ${config.iconColor}`}>
           {config.icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
-            <h4 className="font-medium text-slate-900 dark:text-white capitalize">
+            <h4 className="font-semibold text-slate-900 dark:text-white capitalize">
               {config.label}
             </h4>
             {duration && (
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-slate-800/50 px-2 py-1 rounded-full">
+                <Clock className="h-3 w-3" />
                 ~{duration} min
               </span>
             )}
           </div>
           {suggestion && (
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               {suggestion}
             </p>
           )}

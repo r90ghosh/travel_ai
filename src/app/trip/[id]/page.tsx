@@ -47,18 +47,23 @@ export default function TripPage() {
   }
 
   async function loadTrip() {
+    console.log('[TripPage] loadTrip started for tripId:', tripId);
     setLoading(true);
     setError(null);
 
     try {
       // Get trip
+      console.log('[TripPage] Fetching trip data...');
       const { data: tripData, error: tripError } = await supabase
         .from('trips')
         .select('*')
         .eq('id', tripId)
         .single();
 
+      console.log('[TripPage] Trip fetch result:', { tripData, tripError });
+
       if (tripError || !tripData) {
+        console.error('[TripPage] Trip not found:', tripError);
         setError('Trip not found');
         setLoading(false);
         return;
@@ -67,26 +72,39 @@ export default function TripPage() {
       // Check access
       const { data: { user } } = await supabase.auth.getUser();
       const storedToken = getTokenForTrip(tripId);
+      console.log('[TripPage] Access check:', {
+        userId: user?.id,
+        storedToken,
+        urlToken,
+        tripCreatedBy: tripData.created_by,
+        tripClaimToken: tripData.claim_token
+      });
 
       if (!canAccessTrip(tripData, user?.id || null, urlToken || storedToken)) {
+        console.error('[TripPage] Access denied');
         setError('You do not have access to this trip');
         setLoading(false);
         return;
       }
 
+      console.log('[TripPage] Access granted, setting trip data');
       setTrip(tripData as Trip);
 
       // Load or generate itinerary
       if (tripData.active_version > 0) {
+        console.log('[TripPage] Loading existing itinerary version:', tripData.active_version);
         await loadItinerary(tripData.active_version);
       } else {
+        console.log('[TripPage] No active version, triggering generation');
         await generateItinerary();
       }
 
-    } catch {
+    } catch (err) {
+      console.error('[TripPage] Error loading trip:', err);
       setError('Failed to load trip');
     }
 
+    console.log('[TripPage] loadTrip completed');
     setLoading(false);
   }
 
@@ -104,21 +122,29 @@ export default function TripPage() {
   }
 
   async function generateItinerary() {
+    console.log('[TripPage] generateItinerary started');
     setGenerating(true);
 
     try {
       const token = urlToken || getTokenForTrip(tripId);
+      console.log('[TripPage] Calling generate API with token:', token ? 'present' : 'missing');
+
       const response = await fetch('/api/itinerary/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tripId, claimToken: token }),
       });
 
+      console.log('[TripPage] Generate API response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Generation failed');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[TripPage] Generation failed:', errorData);
+        throw new Error(errorData.error || 'Generation failed');
       }
 
       const result = await response.json();
+      console.log('[TripPage] Generation successful, source:', result.source);
       setItinerary(result.itinerary);
 
       // Reload trip to get updated active_version
@@ -129,8 +155,9 @@ export default function TripPage() {
         .single();
       if (updatedTrip) setTrip(updatedTrip as Trip);
 
-    } catch {
-      setError('Failed to generate itinerary');
+    } catch (err) {
+      console.error('[TripPage] Generate error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate itinerary');
     }
 
     setGenerating(false);
@@ -172,15 +199,15 @@ export default function TripPage() {
   const selectedDayData = itinerary.days.find(d => d.day_number === selectedDay);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
       {/* Banner for anonymous users */}
       {!user && isOwner && (
-        <div className="bg-blue-50 border-b border-blue-100 py-2 px-4 text-center text-sm">
-          <span className="text-blue-800">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 py-3 px-4 text-center text-sm shadow-lg">
+          <span className="text-white font-medium">
             This trip isn&apos;t saved to an account yet.{' '}
             <button
               onClick={() => setShowSignupPrompt('share')}
-              className="font-medium underline hover:no-underline"
+              className="underline hover:no-underline font-semibold"
             >
               Sign up to save it
             </button>
@@ -195,40 +222,59 @@ export default function TripPage() {
         onRegenerate={() => requireAuth('regenerate')}
       />
 
-      <div className="container max-w-7xl py-6">
-        <Tabs defaultValue="itinerary">
-          <TabsList>
-            <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
-            <TabsTrigger value="map">Map</TabsTrigger>
-            <TabsTrigger value="prepare">Prepare</TabsTrigger>
-            <TabsTrigger value="budget">Budget</TabsTrigger>
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        <Tabs defaultValue="itinerary" className="w-full">
+          <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-1.5 text-slate-600 dark:text-slate-400 shadow-sm border border-slate-200/50 dark:border-slate-700/50 mb-8">
+            <TabsTrigger
+              value="itinerary"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg"
+            >
+              Itinerary
+            </TabsTrigger>
+            <TabsTrigger
+              value="map"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg"
+            >
+              Map
+            </TabsTrigger>
+            <TabsTrigger
+              value="prepare"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg"
+            >
+              Prepare
+            </TabsTrigger>
+            <TabsTrigger
+              value="budget"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg"
+            >
+              Budget
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="itinerary" className="mt-6">
-            <div className="flex gap-6">
-              {/* Day selector sidebar */}
-              <div className="w-48 shrink-0">
-                <DaySelector
-                  days={itinerary.days}
-                  selectedDay={selectedDay}
-                  onSelectDay={setSelectedDay}
-                />
-              </div>
+          <TabsContent value="itinerary" className="mt-0">
+            {/* Horizontal day selector */}
+            <div className="mb-8">
+              <DaySelector
+                days={itinerary.days}
+                selectedDay={selectedDay}
+                onSelectDay={setSelectedDay}
+                variant="horizontal"
+              />
+            </div>
 
-              {/* Day content */}
-              <div className="flex-1">
-                {selectedDayData && (
-                  <DayView
-                    day={selectedDayData}
-                    onComment={() => requireAuth('comment')}
-                  />
-                )}
-              </div>
+            {/* Day content - centered */}
+            <div className="max-w-4xl mx-auto">
+              {selectedDayData && (
+                <DayView
+                  day={selectedDayData}
+                  onComment={() => requireAuth('comment')}
+                />
+              )}
             </div>
           </TabsContent>
 
-          <TabsContent value="map" className="mt-6">
-            <div className="h-[600px]">
+          <TabsContent value="map" className="mt-0">
+            <div className="h-[700px] rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700">
               <TripMap
                 itinerary={itinerary}
                 selectedDay={selectedDay}
@@ -237,12 +283,16 @@ export default function TripPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="prepare" className="mt-6">
-            <PrepareTab itinerary={itinerary} />
+          <TabsContent value="prepare" className="mt-0">
+            <div className="max-w-4xl mx-auto">
+              <PrepareTab itinerary={itinerary} />
+            </div>
           </TabsContent>
 
-          <TabsContent value="budget" className="mt-6">
-            <BudgetTab itinerary={itinerary} trip={trip} />
+          <TabsContent value="budget" className="mt-0">
+            <div className="max-w-4xl mx-auto">
+              <BudgetTab itinerary={itinerary} trip={trip} />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -267,12 +317,14 @@ export default function TripPage() {
 // Loading skeleton
 function TripPageSkeleton() {
   return (
-    <div className="container max-w-7xl py-12">
-      <Skeleton className="h-32 w-full mb-6" />
-      <div className="flex gap-6">
-        <Skeleton className="h-96 w-48" />
-        <Skeleton className="h-96 flex-1" />
+    <div className="container max-w-2xl py-24 text-center">
+      <div className="mb-8">
+        <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto flex items-center justify-center">
+          <span className="h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+        </div>
       </div>
+      <h1 className="text-xl font-semibold mb-2 text-gray-700">Loading Trip...</h1>
+      <p className="text-gray-500">Fetching your trip details</p>
     </div>
   );
 }
